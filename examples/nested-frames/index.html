@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Frame Anchor Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Frame Anchor</h1>
+    <p>The tooltip is rendered in this top-level document while its trigger lives two frames down.</p>
+    <iframe src="level-one.html" title="Level one"></iframe>
+  </main>
+
+  <script type="module">
+    import { FrameTooltip } from "../../src/index.js";
+    window.createFrameTooltip = (doc) => new FrameTooltip({ targetWindow: window }).mount(doc);
+  </script>
+</body>
+</html>

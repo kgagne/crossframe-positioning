@@ -1,0 +1,25 @@
+{
+  "name": "frame-anchor",
+  "version": "0.1.0",
+  "description": "Dependency-free geometry translation and overlay positioning across same-origin nested browsing contexts.",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": "./src/index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "iframe",
+    "frames",
+    "geometry",
+    "tooltip",
+    "popover",
+    "overlay",
+    "positioning",
+    "javascript"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
