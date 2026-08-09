@@ -1,6 +1,6 @@
-# Frame Anchor
+# Crossframe Positioning
 
-Frame Anchor is a zero-dependency JavaScript utility for translating element geometry through nested same-origin browsing contexts and positioning overlays in an ancestor window.
+Crossframe Positioning is a zero-dependency JavaScript utility for translating element geometry through nested same-origin browsing contexts and positioning overlays in an ancestor window.
 
 It is intended for legacy or embedded applications where UI elements live inside nested iframes or framesets but tooltips, menus, inspectors, or other overlays need to render in a higher-level document.
 
@@ -8,7 +8,7 @@ It is intended for legacy or embedded applications where UI elements live inside
 
 `getBoundingClientRect()` returns coordinates relative to the element's own viewport. That is not enough when an element is several frames deep and the overlay must be rendered in `window.top`.
 
-Frame Anchor walks the frame hierarchy and translates the element rectangle into the target window's viewport coordinates.
+Crossframe Positioning walks the frame hierarchy and translates the element rectangle into the target window's viewport coordinates.
 
 ## Features
 
@@ -105,7 +105,7 @@ const point = placeOverlay(
 
 ## Same-origin requirement
 
-Frame Anchor cannot traverse cross-origin iframe boundaries. Browsers intentionally prevent scripts from reading the embedding frame element or document across those boundaries.
+Crossframe Positioning cannot traverse cross-origin iframe boundaries. Browsers intentionally prevent scripts from reading the embedding frame element or document across those boundaries.
 
 ## Demo
 
