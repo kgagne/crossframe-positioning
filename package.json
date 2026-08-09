@@ -1,5 +1,5 @@
 {
-  "name": "frame-anchor",
+  "name": "crossframe-positioning",
   "version": "0.1.0",
   "description": "Dependency-free geometry translation and overlay positioning across same-origin nested browsing contexts.",
   "type": "module",
