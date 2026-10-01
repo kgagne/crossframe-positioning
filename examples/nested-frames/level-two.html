@@ -4,7 +4,11 @@
   <p>Second nested frame</p>
   <button data-frame-tip="Rendered in the top-level window.">Hover or focus me</button>
   <script>
-    window.top.createFrameTooltip(document);
+    // The top page's module script may not have run yet when this frame loads.
+    (function init() {
+      if (window.top.createFrameTooltip) window.top.createFrameTooltip(document);
+      else setTimeout(init, 20);
+    })();
   </script>
 </body>
 </html>

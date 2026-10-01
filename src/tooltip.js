@@ -1,3 +1,4 @@
+import { isElement } from "./geometry.js";
 import { FrameOverlay } from "./overlay.js";
 
 export class FrameTooltip {
@@ -10,6 +11,7 @@ export class FrameTooltip {
     this.padding = Number.isFinite(options.padding) ? options.padding : 8;
     this.className = options.className || "frame-tip";
     this.allowHTML = options.allowHTML === true;
+    this.autoUpdate = options.autoUpdate !== false;
     this.active = null;
     this.overlay = null;
 
@@ -42,7 +44,7 @@ export class FrameTooltip {
   }
 
   getTrigger(node) {
-    if (!(node instanceof Element)) return null;
+    if (!isElement(node)) return null;
     return node.closest(this.selector);
   }
 
@@ -54,7 +56,12 @@ export class FrameTooltip {
         placement: this.placement,
         offset: this.offset,
         padding: this.padding,
-        className: this.className
+        className: this.className,
+        autoUpdate: this.autoUpdate,
+        // The overlay hides itself when its trigger or frame goes away.
+        onDetach: (overlay) => {
+          if (overlay === this.overlay) this.active = null;
+        }
       });
       this.active = trigger;
     }
@@ -86,7 +93,7 @@ export class FrameTooltip {
     const trigger = this.getTrigger(event.target);
     if (!trigger || trigger !== this.active) return;
 
-    if (event.relatedTarget instanceof Node && trigger.contains(event.relatedTarget)) return;
+    if (event.relatedTarget?.nodeType && trigger.contains(event.relatedTarget)) return;
     this.hide();
   }
 

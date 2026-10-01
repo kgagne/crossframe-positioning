@@ -14,10 +14,14 @@ Crossframe Positioning walks the frame hierarchy and translates the element rect
 
 - Vanilla JavaScript
 - Zero runtime dependencies
-- Same-origin nested frame traversal
+- Same-origin nested frame traversal, including frame borders, padding and
+  frames scaled with CSS transforms or `zoom`
 - Reusable geometry primitive
 - Overlay positioning with `right`, `left`, `top`, `bottom`, or `auto`
 - Viewport clamping
+- Repositions while shown when any frame between the trigger and the target
+  window scrolls or resizes, or the trigger changes size
+- Hides itself when its trigger is removed or its frame is removed or navigated
 - Tooltip helper
 - Pointer and keyboard/focus support
 - Text-safe tooltip content by default
@@ -103,6 +107,31 @@ const point = placeOverlay(
 );
 ```
 
+## Overlay lifecycle
+
+`FrameOverlay` (and `FrameTooltip`, which uses it) tracks its anchor while
+shown:
+
+```js
+import { FrameOverlay } from "./src/index.js";
+
+const overlay = new FrameOverlay(trigger, {
+  targetWindow: window.top,
+  placement: "bottom",
+  onDetach: () => console.log("trigger or its frame went away")
+});
+
+overlay.create().textContent = "Details";
+overlay.show();   // positions, then tracks scroll, resize and removal
+overlay.hide();   // stops tracking
+overlay.destroy(); // removes the overlay element
+```
+
+Pass `autoUpdate: false` to position only when `show()` or `position()` is
+called. Layout changes in an ancestor document made only through styles (for
+example, moving a frame by changing its `top`) fire no event the overlay can
+observe; call `position()` after making them.
+
 ## Same-origin requirement
 
 Crossframe Positioning cannot traverse cross-origin iframe boundaries. Browsers intentionally prevent scripts from reading the embedding frame element or document across those boundaries.
@@ -124,10 +153,20 @@ Then open `/examples/nested-frames/`.
 ## Tests
 
 ```bash
-npm test
+npm test              # placement and geometry, in Node
+npm run test:browser  # frame traversal, tooltips, tracking and cleanup in a real browser
 ```
 
-Current tests cover placement selection, viewport clamping, and invalid placement handling. Browser-based frame traversal tests are a logical next addition.
+The browser suite serves the repository, opens `test/browser/index.html` in a
+headless browser and collects the results the page posts back, so it needs no
+automation dependency. It uses `$BROWSER`, or the first of `firefox`,
+`chromium`, `chromium-browser` or `google-chrome` on `PATH`; pass
+`--browser <command>` to choose another.
+
+## Limitations
+
+- Cross-origin frames cannot be traversed.
+- Rotated or skewed frames are approximated by their bounding box.
 
 ## Project status
 

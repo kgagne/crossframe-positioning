@@ -6,7 +6,8 @@
   "main": "./src/index.js",
   "exports": "./src/index.js",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test test/*.test.js",
+    "test:browser": "node test/browser/run.js"
   },
   "keywords": [
     "iframe",
