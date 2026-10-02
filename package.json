@@ -5,6 +5,9 @@
   "type": "module",
   "main": "./src/index.js",
   "exports": "./src/index.js",
+  "files": [
+    "src"
+  ],
   "scripts": {
     "test": "node --test test/*.test.js",
     "test:browser": "node test/browser/run.js"

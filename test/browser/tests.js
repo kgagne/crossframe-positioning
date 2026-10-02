@@ -177,6 +177,121 @@ test("tooltip: positions next to the trigger in top-window coordinates", async (
   }
 });
 
+test("tooltip: describes a trigger in another frame through a hidden copy", async () => {
+  const { b } = await nested('<span id="hint">Hint</span><button id="t" aria-describedby="hint" data-frame-tip="Details">x</button>');
+  const tooltip = new FrameTooltip({ targetWindow: window }).mount(b.doc);
+  const button = b.doc.getElementById("t");
+
+  try {
+    button.dispatchEvent(new b.win.PointerEvent("pointerover", { bubbles: true }));
+    const ids = button.getAttribute("aria-describedby").split(" ");
+    assert(ids.length === 2 && ids[0] === "hint", `existing reference kept: ${ids}`);
+    const copy = b.doc.getElementById(ids[1]);
+    assert(copy && copy.hidden, "hidden copy in the trigger's document");
+    assert(copy.textContent === "Details", "copy holds the tooltip text");
+    assert(document.getElementById(ids[1]) === null, "the id is not in the tooltip's document");
+
+    button.dispatchEvent(new b.win.PointerEvent("pointerout", { bubbles: true, relatedTarget: b.doc.body }));
+    assert(button.getAttribute("aria-describedby") === "hint", "reference removed on hide");
+    assert(!copy.isConnected, "copy removed on hide");
+
+    button.dispatchEvent(new b.win.FocusEvent("focusin", { bubbles: true }));
+    const shownCopy = b.doc.getElementById(button.getAttribute("aria-describedby").split(" ")[1]);
+    tooltip.destroy();
+    assert(button.getAttribute("aria-describedby") === "hint", "reference removed on destroy");
+    assert(!shownCopy.isConnected, "copy removed on destroy");
+  } finally {
+    tooltip.destroy();
+  }
+});
+
+test("tooltip: describes a same-document trigger by the tooltip's id", async () => {
+  const button = document.createElement("button");
+  button.dataset.frameTip = "Same";
+  document.body.appendChild(button);
+  const tooltip = new FrameTooltip({ targetWindow: window }).mount(document);
+
+  try {
+    button.dispatchEvent(new PointerEvent("pointerover", { bubbles: true }));
+    const tip = document.querySelector(".frame-tip");
+    assert(tip.id && button.getAttribute("aria-describedby") === tip.id, "points at the tooltip");
+    assert(document.querySelectorAll("[hidden]").length === 0, "no hidden copy");
+
+    button.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body }));
+    assert(!button.hasAttribute("aria-describedby"), "attribute removed when it held only the tooltip");
+  } finally {
+    tooltip.destroy();
+  }
+});
+
+test("tooltip: Escape hides it until the pointer leaves the trigger", async () => {
+  const { b } = await nested('<button id="t" data-frame-tip="x"><span id="inner">x</span></button>');
+  const tooltip = new FrameTooltip({ targetWindow: window }).mount(b.doc);
+  const button = b.doc.getElementById("t");
+  const inner = b.doc.getElementById("inner");
+  const escape = (win, doc) => doc.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+
+  try {
+    button.dispatchEvent(new b.win.PointerEvent("pointerover", { bubbles: true }));
+    const tip = document.querySelector(".frame-tip");
+    escape(b.win, b.doc);
+    assert(isHidden(tip), "hidden by Escape in the trigger's document");
+    assert(!button.hasAttribute("aria-describedby"), "description removed");
+
+    inner.dispatchEvent(new b.win.PointerEvent("pointerover", { bubbles: true }));
+    assert(isHidden(document.querySelector(".frame-tip")), "stays hidden while the pointer is on the trigger");
+
+    inner.dispatchEvent(new b.win.PointerEvent("pointerout", { bubbles: true, relatedTarget: b.doc.body }));
+    button.dispatchEvent(new b.win.PointerEvent("pointerover", { bubbles: true }));
+    assert(!isHidden(document.querySelector(".frame-tip")), "shown again after the pointer left");
+
+    escape(window, document);
+    assert(isHidden(document.querySelector(".frame-tip")), "hidden by Escape in the target document");
+  } finally {
+    tooltip.destroy();
+  }
+});
+
+test("tooltip: Escape hides a focused trigger's tooltip until focus returns", async () => {
+  const { b } = await nested('<button id="t" data-frame-tip="x">x</button>');
+  const tooltip = new FrameTooltip({ targetWindow: window }).mount(b.doc);
+  const button = b.doc.getElementById("t");
+
+  try {
+    button.dispatchEvent(new b.win.FocusEvent("focusin", { bubbles: true }));
+    b.doc.dispatchEvent(new b.win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    assert(isHidden(document.querySelector(".frame-tip")), "hidden by Escape");
+
+    button.dispatchEvent(new b.win.PointerEvent("pointerover", { bubbles: true }));
+    assert(isHidden(document.querySelector(".frame-tip")), "hover does not reopen it");
+
+    button.dispatchEvent(new b.win.FocusEvent("focusout", { bubbles: true }));
+    button.dispatchEvent(new b.win.FocusEvent("focusin", { bubbles: true }));
+    assert(!isHidden(document.querySelector(".frame-tip")), "shown again on renewed focus");
+  } finally {
+    tooltip.destroy();
+  }
+});
+
+test("tooltip: Escape listeners are removed on destroy", async () => {
+  const { b } = await nested('<button id="t" data-frame-tip="x">x</button>');
+  const tooltip = new FrameTooltip({ targetWindow: window }).mount(b.doc);
+  tooltip.destroy();
+  tooltip.active = b.doc.getElementById("t");
+  b.doc.dispatchEvent(new b.win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  assert(tooltip.dismissed === null, "no handler ran after destroy");
+});
+
+test("overlay: default class is crossframe-overlay", async () => {
+  const { b } = await nested(target);
+  const overlay = new FrameOverlay(b.doc.getElementById("t"), { targetWindow: window });
+  try {
+    assert(overlay.create().className === "crossframe-overlay", overlay.element.className);
+  } finally {
+    overlay.destroy();
+  }
+});
+
 // Auto-update ----------------------------------------------------------------
 
 async function trackedOverlay(innerHtml, options = {}) {

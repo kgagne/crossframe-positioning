@@ -12,7 +12,7 @@ export class FrameOverlay {
     this.placement = options.placement || "auto";
     this.offset = Number.isFinite(options.offset) ? options.offset : 8;
     this.padding = Number.isFinite(options.padding) ? options.padding : 8;
-    this.className = options.className || "frame-anchor-overlay";
+    this.className = options.className || "crossframe-overlay";
     this.autoUpdate = options.autoUpdate !== false;
     this.onDetach = typeof options.onDetach === "function" ? options.onDetach : null;
     this.element = null;

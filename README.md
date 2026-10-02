@@ -23,7 +23,8 @@ Crossframe Positioning walks the frame hierarchy and translates the element rect
   window scrolls or resizes, or the trigger changes size
 - Hides itself when its trigger is removed or its frame is removed or navigated
 - Tooltip helper
-- Pointer and keyboard/focus support
+- Pointer and keyboard/focus support, Escape to dismiss, and
+  `aria-describedby` on the trigger, including across frames
 - Text-safe tooltip content by default
 - Small modular API
 
@@ -65,6 +66,25 @@ const tooltips = new FrameTooltip({
 
 tooltips.mount();
 ```
+
+Tooltip content is inserted as text by default. Passing `allowHTML: true`
+inserts the attribute's value as HTML in the target window's document instead.
+**Only use `allowHTML` with content you fully control.** With user-supplied or
+otherwise untrusted content it allows cross-site scripting, and the markup runs
+in the ancestor document, not in the frame it came from.
+
+### Accessibility
+
+- The tooltip has `role="tooltip"` and is shown on hover and on keyboard focus.
+- While shown, the trigger's `aria-describedby` refers to it, so screen readers
+  announce it. ID references cannot cross documents, so when the tooltip
+  renders in another window the trigger refers to a hidden copy of the tooltip
+  text in its own document. Existing `aria-describedby` values are kept, and
+  the reference is removed again on hide.
+- Escape hides the tooltip without moving focus or the pointer (WCAG 1.4.13).
+  It stays hidden until the pointer leaves the trigger or the trigger loses
+  focus. The key is not consumed, so the page still receives it. Escape is
+  heard in the mounted document and in the target window's document.
 
 Suggested CSS:
 
@@ -126,6 +146,9 @@ overlay.show();   // positions, then tracks scroll, resize and removal
 overlay.hide();   // stops tracking
 overlay.destroy(); // removes the overlay element
 ```
+
+The overlay element gets the class `crossframe-overlay` unless `className` is
+given (`FrameTooltip` uses `frame-tip`).
 
 Pass `autoUpdate: false` to position only when `show()` or `position()` is
 called. Layout changes in an ancestor document made only through styles (for
